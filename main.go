@@ -1,13 +1,14 @@
 package main
 
 import (
+	"net/http"
 	"reports/db"
 )
 
 func main() {
-	db.GenerateReport()
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	fmt.Fprintln(w, "hello")
-	// })
-	// http.ListenAndServe(":8080", nil)
+	// fs := http.FileServer(http.Dir("./static"))
+	http.HandleFunc("/trigger_report", db.HandleTrigger)
+	http.HandleFunc("/get_report", db.HandleGet)
+	http.HandleFunc("/download", db.HandleDownload)
+	http.ListenAndServe(":8080", nil)
 }

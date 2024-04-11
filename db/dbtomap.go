@@ -15,13 +15,15 @@ func PollstoMap() map[string][]*Polls {
 		var c string
 		row.Scan(&a, &b, &c)
 		storeId := a
-		Stores = append(Stores, storeId)
 		timestampOfPoll := StrtoTime1(c)
 		status := b
 		data[storeId] = append(data[storeId], &Polls{
 			status:          status,
 			timestampOfPoll: timestampOfPoll,
 		})
+	}
+	for a := range data {
+		Stores = append(Stores, a)
 	}
 	return data
 }

@@ -13,6 +13,17 @@ var storeTimezone map[string]*time.Location = GetTimeZone()
 
 func FindStartAndEndtime(storeId string, dayNumber int, timestamp time.Time, timezone *time.Location) (time.Time, time.Time) {
 	var startTime, endTime time.Time
+	_, ok := storeTimings[storeId]
+	if !ok {
+		startTime = time.Date(timestamp.Year(),
+			timestamp.Month(),
+			timestamp.Day(),
+			0, 0, 0, 0, timezone)
+		endTime = time.Date(timestamp.Year(),
+			timestamp.Month(),
+			timestamp.Day(), 23, 59, 59, 999999999, timezone)
+		return startTime, endTime
+	}
 	for _, timings := range storeTimings[storeId] { // O(1) since this will run only once
 		if timings.dayOfWeek == dayNumber {
 			startTime = time.Date(timestamp.Year(),
@@ -35,10 +46,13 @@ func FindStartAndEndtime(storeId string, dayNumber int, timestamp time.Time, tim
 	return startTime, endTime
 }
 
+var ReportName string = strconv.FormatInt(time.Now().UTC().UnixNano(), 16) // returns the string representation of the first arg in base 16
+
 func GenerateReport() {
 
-	reportName := strconv.FormatInt(time.Now().UTC().UnixNano(), 16) // returns the string representation of the first arg in base 16
-	reportFile, err := os.Create(reportName + ".csv")
+	home, err := os.UserHomeDir()
+	CheckError(err)
+	reportFile, err := os.Create(home + "/" + ReportName + ".csv")
 	CheckError(err)
 	csvWriter := csv.NewWriter(reportFile)
 	headings := []string{"store ID", "uptime  Last Hour", "uptime Last Day Final", "uptime Last Week Final", "downtime Last Hour Final",
@@ -73,6 +87,7 @@ func GenerateReport() {
 		uptimeLastHour, downtimeLastHour := 0, 0
 		ind := 0 // this variable is used so that uptime/downtime in the last day can be added to the uptime/downtime in the last hour.
 		for i := 0; i < n-1; i++ {
+			startTime, endTime = FindStartAndEndtime(storeId, int(referenceTime.timestampOfPoll.Weekday()), *referenceTime.timestampOfPoll, timezone)
 
 			*pollsData[storeId][i].timestampOfPoll = pollsData[storeId][i].timestampOfPoll.In(timezone)
 
@@ -137,7 +152,7 @@ func GenerateReport() {
 		lastDayTime := referenceTime.timestampOfPoll.Add(-time.Hour * 23)
 		for i := ind; i < n-1; i++ {
 			// we have to calculate startime and endtime everyday since they can be different for each day for some stores.
-			startTime, endTime := FindStartAndEndtime(storeId, int(pollsData[storeId][i].timestampOfPoll.Weekday()), *pollsData[storeId][i].timestampOfPoll, timezone)
+			startTime, endTime = FindStartAndEndtime(storeId, int(pollsData[storeId][i].timestampOfPoll.Weekday()), *pollsData[storeId][i].timestampOfPoll, timezone)
 
 			*pollsData[storeId][i].timestampOfPoll = pollsData[storeId][i].timestampOfPoll.In(timezone)
 
@@ -202,7 +217,7 @@ func GenerateReport() {
 		lastWeekTime := referenceTime.timestampOfPoll.Add(-time.Hour * 24 * 6)
 		for i := ind; i < n-1; i++ {
 			// we have to calculate startime and endtime everyday since they can be different for each day for some stores.
-			startTime, endTime := FindStartAndEndtime(storeId, int(pollsData[storeId][i].timestampOfPoll.Weekday()), *pollsData[storeId][i].timestampOfPoll, timezone)
+			startTime, endTime = FindStartAndEndtime(storeId, int(pollsData[storeId][i].timestampOfPoll.Weekday()), *pollsData[storeId][i].timestampOfPoll, timezone)
 
 			*pollsData[storeId][i].timestampOfPoll = pollsData[storeId][i].timestampOfPoll.In(timezone)
 
