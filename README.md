@@ -10,3 +10,5 @@ It is mentioned in the GenerateReport() function. Please refer to that for furth
 applied the above extrapolation logic to calculate the uptime/downtime when the current status and the next status are not the same.
 
 I still have to work on a few corner cases, which are giving undesired reports for some stores.
+
+This implementation uses maps for storing the data in the database. It is not space-efficient, but it takes only about a second or two to complete the report generation. But performing all the operations directly on the database is space-efficient but it takes around 29 minutes(I tried that as well) to complete the report generation. Therefore I have not done that implementation.
